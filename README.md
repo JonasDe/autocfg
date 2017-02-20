@@ -1,14 +1,17 @@
 # autocfg
 
-A combination of features to make life easier when moving basic settings and dotfiles between computers.
-Features included:
-profile-based configuration
-backup safety
-ssh-copying
-file/folder copying
-auto-branching
-modular
-dependency installation
+A combination of features to make life easier when copying basic settings and dotfiles symlinking dotfiles for different computers.
+Supported behaviours:
+
+* profile-based configuration
+* backup safety
+* ssh-copying
+* file/folder copying
+* auto-branching
+* modular
+* dependency installation
+
+Tested and working in ubuntu, with python3.
 
 ## Installation
 
