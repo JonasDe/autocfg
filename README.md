@@ -21,8 +21,8 @@ Upon encountering a missing field in the json-profile the linking script will si
 
 
 autocfg consists of two parts:
-Part 1:
-**linker.py** which uses a profile to decide where and how to link.
+
+Part 1:**linker.py** which uses a profile to decide where and how to link.
 To run with **all** features `python3 linker.py -a profile.json` should be invoked.
 Flags can be combined to select specific features only, for example:
 `python3 linker.py -il profile.json` will install dependencies and symlink, while
@@ -52,7 +52,7 @@ optional arguments:
 
 ```
 Part 2:
-** profgen.py** which helps you generate a profile for linker.py with ease.
+**profgen.py** which helps you generate a profile for linker.py with ease.
 This is a convenience script and you can setup the profile manually if you wish to by simply editing the profile.json file.
 However, should you have a lot of files/folders to add to the profile, this script will help you with that.
 
