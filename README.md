@@ -32,6 +32,7 @@ It might thus be better to run the profgen.py from the actual dotfiles repo that
 3. `python3 profile.py -d dependencies.txt profile.json` will generate a profile.json file with paths specified in profgen.py
 
 ### Link
+```
 usage: linker.py [-h] [-r] [-f] [-a] [-b] [-s] [-d] [-i] [-l] config
 
 The script will default all Config flag options to True if no [Config flag] is
@@ -53,7 +54,7 @@ optional arguments:
   -i, --install      sets install flag to true.[Config flag]
   -l, --link         sets symlink flag to true.[Config flag]
 
-
+```
 1. `python3 linker.py -a profile.json` will link with all features enabled.
 2. You can easily modify and add more features to the script if you wish.
 
