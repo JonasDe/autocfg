@@ -1,0 +1,32 @@
+{
+    "apt_get_dependencies": [
+        "python3",
+        "openssl"
+    ],
+    "backup": "~/.dotfiles.backup",
+    "branchdata": [
+        {
+            "branch_locally": true,
+            "dotfiles_url": "git@gitlab.com:example/example.git",
+            "push_branch": true
+        }
+    ],
+    "directories": [],
+    "link": {
+        "example": "~/example",
+        "example2": "~/example2"
+    },
+    "ssh": {
+        "ssh_cfg": {
+            "dest": "~/.ssh/config",
+            "src": ".ssh/config"
+        },
+        "ssh_keys": [
+            {
+                "decrypt": true,
+                "dest": "~/.ssh/example.public",
+                "src": ".ssh/example.private"
+            }
+        ]
+    }
+}
