@@ -1,6 +1,6 @@
 # autocfg
 
-A combination of features to make life easier when copying basic settings and dotfiles symlinking dotfiles for different computers.
+A combination of features to make life easier when copying basic settings and symlinking dotfiles for different computers.
 Supported behaviours:
 
 * profile-based configuration
@@ -54,7 +54,7 @@ Flags can be combined to select specific features only, for example:
 ```
 usage: linker.py [-h] [-r] [-f] [-a] [-b] [-s] [-d] [-i] [-l] config
 
-The script will default all Config flag options to True if no [Config flag] is
+The script will default all Config flag options to False if no [Config flag] is
 provided. By providing one or more config flags, all others will be set to
 false.
 
