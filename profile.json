@@ -13,8 +13,12 @@
     ],
     "directories": [],
     "link": {
+        ".ssh/config": "~/.ssh/config",
+        ".ssh/example.private": "~/.ssh/example.private",
+        ".ssh/example.pub": "~/.ssh/example.pub",
         "example": "~/example",
-        "example2": "~/example2"
+        "example2": "~/example2",
+        "profile.json": "~/profile.json"
     },
     "ssh": {
         "ssh_cfg": {
@@ -24,7 +28,7 @@
         "ssh_keys": [
             {
                 "decrypt": true,
-                "dest": "~/.ssh/example.public",
+                "dest": "~/.ssh/",
                 "src": ".ssh/example.private"
             }
         ]
