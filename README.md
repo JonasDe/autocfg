@@ -29,7 +29,20 @@ Part 1:
 **profgen.py** which helps you generate a profile for linker.py with ease.
 This is a convenience script and you can setup the profile manually if you wish to by simply editing the profile.json file.
 However, should you have a lot of files/folders to add to the profile, this script will help you with that.
+```
+usage: profgen.py [-h] [-d dependencies] outfile
 
+Profile Generator
+
+positional arguments:
+  outfile          outfile name
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -d dependencies  package dependency file, each package string separated by
+                   newline
+
+```
 
 
 Part 2:**linker.py** which uses a profile to decide where and how to link.
