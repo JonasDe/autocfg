@@ -295,8 +295,9 @@ def main():
     # Command line options
     # Parser details
     parser = argparse.ArgumentParser(description="""
-    The script will default all Config flag options to True if no [Config flag] is provided.
-    By providing one or more config flags, all others will be set to false.""")
+    The script will default all Config flag options to False. These flags are needed to enable the scrpted features. Run with '-a' to include all, or simply toggle the ones of interest on one by one by adding their corresponding flag.
+    
+    """)
     parser.add_argument("config", help="the JSON file you want to use")
     parser.add_argument("-r", "--replace", action="store_true",
                         help="replace files/folders if they already exist")
