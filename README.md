@@ -54,9 +54,7 @@ Flags can be combined to select specific features only, for example:
 ```
 usage: linker.py [-h] [-r] [-f] [-a] [-b] [-s] [-d] [-i] [-l] config
 
-The script will default all Config flag options to False if no [Config flag] is
-provided. By providing one or more config flags, all others will be set to
-false.
+The script will default all Config flag options to False.
 
 positional arguments:
   config             the JSON file you want to use
