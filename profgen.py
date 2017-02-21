@@ -1,6 +1,21 @@
-"""A simple python script template.
+#!/usr/bin/env python3
+#autocfg
+#Copyright (C) 2017  
+#Jonas Danebjer
+#jonasd90@gmail.com
 
-"""
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 import os
@@ -39,27 +54,44 @@ def query_f_d(question, default="file"):
         else:
             sys.stdout.write("Please respond with 'f' or 'd' "
                              "(or 'file' or 'dir').\n")
-            
+
+def abspath(path):
+    return os.path.abspath(os.path.expanduser(path))
+
+def within(fullpath, dirlist):
+    for name in dirlist:
+        if name in fullpath:
+            return True
+    return False
+
+
+
 def genfiles(rootdir, ignorelist):
     d={}
+    dirlist = ignorelist['directories']
+    ignorelist = ignorelist['files']
 
     for root, dirs, files in os.walk(rootdir):
         for filename in files:
             if filename not in ignorelist:
                 filename = os.path.join(root, filename)
+                if within(filename, dirlist):
+                    continue
+
                 relpath = os.path.relpath(filename, rootdir)
                 d[relpath] = "~/"+relpath
-
     return d 
+
 def gendir(rootdir, ignorelist):
     d={}
-
+    ignorelist =ignorelist['directories']
+    #ignorelist = ignorelist['files']
     for root, dirs, files in os.walk(rootdir):
         if not dirs:
-  
             relpath = os.path.relpath(root, rootdir)
+            if within(relpath, ignorelist):
+                continue
             d[relpath+'/'] = "~/"+relpath
- 
     return d
 
 def query_yes_no(question, default="yes"):
@@ -114,14 +146,21 @@ def main():
    
     fileselected = query_f_d("Generate profile for files or directories?")
     profile = {}
+    #Change to where you want to put backup folders 
     profile["backup"] = "~/.dotfiles.backup"
-    profile["directories"] = []
+
+
+    # Change to your git repo
     profile["branchdata"] = {"dotfiles_url": "git@gitlab.com:example/example.git",
         "branch_locally": True,
         "push_branch": True},
+
+    # Change if you have different ssh-paths
+    # src = where your key is located in the replica folder
+    # dest = where on the system to copy to
     profile['ssh']= { "ssh_keys": [
         { "src": ".ssh/example.private",
-            "dest": "~/.ssh/example.public",
+            "dest": "~/.ssh/",
             "decrypt": True
             }
         ]
@@ -131,9 +170,17 @@ def main():
             "dest": "~/.ssh/config"
             }
         }
+    #Auto geneated
+    profile["directories"] = []
     if args.d: profile["apt_get_dependencies"] = [str.strip(x) for x in  open(args.d).readlines()]
-    
-    ignorelist = [sys.argv[0], 'dependencies.txt']                  #ignore self
+
+    #Folders to ignore 
+    ignorelist = {
+            "files":[sys.argv[0], 'dependencies.txt', 'linker.py', 'LICENSE', 'README.md'],
+            "directories": [".git"]
+            }
+
+
     if fileselected:
         profile["link"] =  genfiles(rootdir, ignorelist)
     else:
