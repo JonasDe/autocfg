@@ -107,7 +107,7 @@ def error_print(val):
 def ask_user(prompt):
     valid = {"yes":True, 'y':True, '':True, "no":False, 'n':False}
     while True:
-        print(prompt+" ",end="")
+        print(prompt)
         choice = input().lower()
         if choice in valid:
             return valid[choice]
@@ -203,15 +203,16 @@ def ssh_copy(key):
 def link(**kwargs):
     profile = kwargs.get('profile')
     args = kwargs.get('args')
-    backupdest = kwargs.get('backup')
+    backup = profile.get('backup')
     links = profile.get('link' )
     assertFeature(links, "link")
-    [create_symlink(src, links[src], args.replace, backupdest) for src in links] 
+    [create_symlink(src, links[src], args.replace, backupdest=backup) for src in links] 
 
 
 def create_symlink(src, dest, replace, backupdest):
 
     reldest = dest
+    print(backupdest)
     dest = abspath(dest)
     src = abspath(src)
     if not assert_path(src, dest):
@@ -219,17 +220,20 @@ def create_symlink(src, dest, replace, backupdest):
 
     broken_symlink = os.path.lexists(dest) and not os.path.exists(dest)
     if os.path.lexists(dest):
+
+        print("link exists for {}".format(dest))
         if os.path.islink(dest) and os.readlink(dest) == src:
             print("Skipping existing {0} -> {1}".format(dest, src))
             return
         elif backupdest:
             print("backup from dest {0}".format(dest))
-            copy_path(dest, os.path.join(os.path.expanduser(backupdest),os.path.relpath(reldest, "~")), backup=True)
+            copy_path(dest, src, backup=True)
             #replace or ask_user(dest+" exists, delete it? [Y/n]")
-            
+            print("backup done!")
             if os.path.isfile(dest) or broken_symlink:
                 os.remove(dest)
             else:
+                
                 shutil.rmtree(dest)
         else:
             return
@@ -342,7 +346,6 @@ def main():
     features = [install, ssh, resetbackup, link, branch, directories]
     for f in features:
 
-        print(flags.get(f.__name__))
         if flags.get(f.__name__):
             try:
                 f(**kwa)
