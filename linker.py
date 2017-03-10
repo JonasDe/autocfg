@@ -155,15 +155,15 @@ def branch(**kwargs):
 
 
 def fail(msg, src, dest):
-    print("Failed " + msg + " src: {0} dest: {1}".format(src,dest))
+    print("[FAILED] " + msg + " src: {0} dest: {1}".format(src,dest))
     return false
 
 def fail(msg, src):
-    print("Failed " + msg + " src: {0} ".format(src)) 
+    print("[FAILED] " + msg + " src: {0} ".format(src)) 
     return false
 
 def success(msg, src, dest):
-    print("Succes  "  + msg + " src: {0} dest : {1}".format(src,dest))
+    print("Success  "  + msg + " src: {0} dest : {1}".format(src,dest))
     return true
 
 
@@ -235,14 +235,13 @@ def create_symlink(src, dest, replace, backupdest):
     broken_symlink = os.path.lexists(dest) and not os.path.exists(dest)
     if os.path.lexists(dest):
 
-        print("link exists for {}".format(dest))
+        print("following file exists :{}".format(dest))
         if os.path.islink(dest) and os.readlink(dest) == src:
-            print("Skipping existing {0} -> {1}".format(dest, src))
+            print("already symlink, skipping {0} -> {1}".format(dest, src))
             return
         elif backupdest:
             print("backup from dest {0}".format(dest))
             copy_path(dest, src, backup=True)
-            #replace or ask_user(dest+" exists, delete it? [Y/n]")
             print("backup done!")
             if os.path.isfile(dest) or broken_symlink:
                 os.remove(dest)
@@ -251,7 +250,7 @@ def create_symlink(src, dest, replace, backupdest):
                 shutil.rmtree(dest)
         else:
             return
-    print("Linking {0} -> {1}".format(dest, src))
+    print("symlinking {0} -> {1}".format(dest, src))
     assure_parent(dest)
     os.symlink(src, dest)
 
