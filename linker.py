@@ -89,6 +89,14 @@ def prompt(question, default="yes"):
 def abspath(path):
     return os.path.abspath(os.path.expanduser(path))
 
+
+def assert_src(src):
+    if not src:
+        return False
+    if not os.path.exists(abspath(src)):
+        return False
+    return True
+
 def assert_path(src, dest):
     if not src or not dest:
         return False
@@ -148,6 +156,10 @@ def branch(**kwargs):
 
 def fail(msg, src, dest):
     print("Failed " + msg + " src: {0} dest: {1}".format(src,dest))
+    return false
+
+def fail(msg, src):
+    print("Failed " + msg + " src: {0} ".format(src)) 
     return false
 
 def success(msg, src, dest):
@@ -215,8 +227,10 @@ def create_symlink(src, dest, replace, backupdest):
     print(backupdest)
     dest = abspath(dest)
     src = abspath(src)
-    if not assert_path(src, dest):
-        return fail("symlink", src, dest)
+
+    print("processing link {0} -> {1}".format(dest, src))
+    if not assert_src(src):
+        return fail("symlink", src)
 
     broken_symlink = os.path.lexists(dest) and not os.path.exists(dest)
     if os.path.lexists(dest):
@@ -283,6 +297,14 @@ def resetbackup(**kwargs):
     else:
         os.makedirs(dest)
 
+def commands(**kwargs):
+    profile = kwargs.get('profile')
+    args = kwargs.get('args')
+    commands = profile.get('commands')
+    assertFeature(commands, "commands")
+    for command in commands:
+        run_command(command)
+
 def run_command(command):
     return os.system(command) #for new local branch for new local branch
 
@@ -333,7 +355,8 @@ def main():
             'ssh',
             'directories',
             'install',
-            'link']
+            'link',
+            'commands']
     flags = {k: argvars[k] for k in cfgflg if k in argvars}
 
     #Always assume backup true for safety
