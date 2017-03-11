@@ -241,7 +241,7 @@ def create_symlink(src, dest, replace, backupdest):
             return
         elif backupdest:
             print("backup from dest {0}".format(dest))
-            copy_path(dest, src, backup=True)
+            copy_path(src, dest, backup=True)
             print("backup done!")
             if os.path.isfile(dest) or broken_symlink:
                 os.remove(dest)
@@ -268,7 +268,7 @@ def assure_parent(path):
 def copy_path(src, dest, force=False, backup=False):
     dest = os.path.expanduser(dest)
     src = os.path.abspath(src)
-
+    print(dest)
     if os.path.exists(dest):
         if ask_user(dest+ " exists, replace it? [Y/n]"):
             if os.path.isfile(dest):
