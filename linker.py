@@ -221,12 +221,17 @@ def link(**kwargs):
     [create_symlink(src, links[src], args.replace, backupdest=backup) for src in links] 
 
 
+
+
+
+
 def create_symlink(src, dest, replace, backupdest):
 
     reldest = dest
-    print(backupdest)
+    relsrc = src
     dest = abspath(dest)
     src = abspath(src)
+    
 
     print("processing link {0} -> {1}".format(dest, src))
     if not assert_src(src):
@@ -234,24 +239,25 @@ def create_symlink(src, dest, replace, backupdest):
 
     broken_symlink = os.path.lexists(dest) and not os.path.exists(dest)
     if os.path.lexists(dest):
-
-        print("following file exists :{}".format(dest))
+        print("following file exists: {}".format(dest))
         if os.path.islink(dest) and os.readlink(dest) == src:
             print("already symlink, skipping {0} -> {1}".format(dest, src))
             return
         elif backupdest:
-            print("backup from dest {0}".format(dest))
-            copy_path(src, dest, backup=True)
-            print("backup done!")
+            # Backup
+            backup_file(dest, backupdest)
+            # Clear 
             if os.path.isfile(dest) or broken_symlink:
                 os.remove(dest)
             else:
-                
                 shutil.rmtree(dest)
+
         else:
             return
     print("symlinking {0} -> {1}".format(dest, src))
     assure_parent(dest)
+
+
     os.symlink(src, dest)
 
 def exists(path):
@@ -261,14 +267,28 @@ def dirname(path):
     return os.path.dirname(abspath(path))
 
 def assure_parent(path):
+    print(path)
     folder = dirname(abspath(path))
     if not exists(folder):
+        print("making {}".format(folder))
         os.makedirs(folder)
 
-def copy_path(src, dest, force=False, backup=False):
+def backup_file(prepath, backupdest):
+    postpath = os.path.relpath(abspath(prepath), os.path.expanduser('~'))
+    backupdest = os.path.join(abspath(backupdest), postpath).replace("..", "xx")
+    parent_folder = os.path.dirname(backupdest)
+    if not os.path.exists(parent_folder):
+        os.makedirs(parent_folder)
+    if os.path.isfile(prepath):
+        shutil.copy(prepath, backupdest)
+    else:
+        shutil.copytree(prepath, backupdest)
+    print("backup done!")
+
+
+def copy_path(src, dest, force=False, announce=False):
     dest = os.path.expanduser(dest)
     src = os.path.abspath(src)
-    print(dest)
     if os.path.exists(dest):
         if ask_user(dest+ " exists, replace it? [Y/n]"):
             if os.path.isfile(dest):
@@ -277,8 +297,10 @@ def copy_path(src, dest, force=False, backup=False):
                 shutil.rmtree(dest)
         else:
             return
-    print("{0} {1} -> {2}".format('backing up' if backup else 'copying',src, dest))
+    if announce:
+        print("copying {1} -> {2}".format(src,dest))
     assure_parent(dest)
+    
     if os.path.isfile(src):
         shutil.copy(src, dest)
     else:
