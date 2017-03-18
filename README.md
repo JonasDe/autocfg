@@ -5,9 +5,7 @@ Supported behaviours:
 
 * profile-based configuration
 * backup safety
-* ssh-copying
 * file/folder copying
-* auto-branching
 * modular
 * dependency installation
 
@@ -16,45 +14,53 @@ Tested and working in ubuntu, with python3.
 ## Installation
 
 The main script to use is linker.py which requires a profile file in order to retrieve settings.
-The only installation needed for the script to work is python3 and openssl.
+The only installation needed for the script to work is python3.
 
 ## Usage
 ### General
+It assumes the dotfiles is located underneath the home folder (doesn't have to be directly, but it has to be some subfolder of $HOME).
+
 Upon encountering a missing field in the json-profile the linking script will simply ignore that feature and continue.
 
 
 autocfg consists of two parts, one that generates the profile and one that uses it. This is so that you can manually look over the profile and edit it should some unwanted config have been added to it. 
 
-Part 1:
-**profgen.py** which helps you generate a profile for linker.py with ease.
+### Step 1
+Make sure the files from this repo is placed in your dotfiles folder.
+Run **profgen.py**. 
+It helps you generate a profile for linker.py with ease.
 This is a convenience script and you can setup the profile manually if you wish to by simply editing the profile.json file.
-However, should you have a lot of files/folders to add to the profile, this script will help you with that.
+However, should you have a lot of files/folders to add to the profile, this script will help you do just that.
+
 ```
-usage: profgen.py [-h] [-d dependencies] outfile
+usage: profgen.py [-h] outfile
 
 Profile Generator
 
 positional arguments:
-  outfile          outfile name
+  outfile     outfile name
 
 optional arguments:
-  -h, --help       show this help message and exit
-  -d dependencies  package dependency file, each package string separated by
-                   newline
+  -h, --help  show this help message and exit
 
 ```
 
+With the generated profile, we can now proceed to step 2.
 
-Part 2:**linker.py** which uses a profile to decide where and how to link.
+### Step 2
+
+Run **linker.py**.
+It uses a profile to decide where and how to link.
 To run with **all** features `python3 linker.py -a profile.json` should be invoked.
 Flags can be combined to select specific features only, for example:
 `python3 linker.py -il profile.json` will install dependencies and symlink, while
-`python3 linker.py -b profile.json` will only branch according to the profile.
+`python3 linker.py -l profile.json` will only link according to the profile.
 
 ```
-usage: linker.py [-h] [-r] [-f] [-a] [-b] [-s] [-d] [-i] [-l] config
+usage: linker.py [-h] [-r] [-f] [-a] [-d] [-l] [-i] [-c] config
 
-The script will default all Config flag options to False.
+The script will not run any feature unless a flag is supplied. Each included
+flag enables the corresponding feature. Run with '-a' to include all.
 
 positional arguments:
   config             the JSON file you want to use
@@ -64,17 +70,18 @@ optional arguments:
   -r, --replace      replace files/folders if they already exist
   -f, --force        omits [Y/N] prompts and chooses the default value for the
                      choice
-  -a, --all          enables all config flags
-  -b, --branch       sets branch flag to true.[Config flag]
-  -s, --ssh          sets ssh flag to true.[Config flag]
-  -d, --directories  sets directory flag to true.[Config flag]
-  -i, --install      sets install flag to true.[Config flag]
-  -l, --link         sets symlink flag to true.[Config flag]
+  -a, --all          enables all features
+  -d, --directories  activates symlinking for directories
+  -l, --link         activates symlinking procedure for files
+  -i, --install      activates installation procedure
+  -c, --commands     activates command procedure
+
 
 ```
 
+## How the programs work
 
-### profgen.py
+###  profgen.py
 Run `python3 -d dependencies.txt profile.json` in the terminal to run the script and generate the file **profile.json** using the dependency file to add dependencies to the profile. 
 
 
@@ -128,67 +135,26 @@ This field says which packages should be installed. Openssl will be used for the
 ```
 The backup field sets which folder to put any conflicting files in upon trying to symlink. If files already exists at the paths defined in the linking stage, they will be copied to the backup folder to prevent loss of information.
 
-#### Branching
-```
-"branchdata": {
-            "branch_locally": true,
-            "dotfiles_url": "git@gitlab.com:example/example.git",
-            "push_branch": true
-              }
-```
-Some people like to automatically branch their dotfiles/configs on different computers, and therefore the above feature was added.
-The above settings will ask for a branch name and then automatically branch the repo (assuming there is a .git folder in the working directory). 
-
-**branch_locally**:  
-Creates a local branch.
-**dotfiles_url**: 
-The url from which the repo was cloned. This is so that it uses SSH instead of HTTPS after cloning the repo. 
-**push_branch**: 
-Pushes the branch to the git repo.
-
 #### Directories
 ``` 
     "directories": []
 ```
 This just creates empty directories at the paths supplied within the list of the field. 
 
-#### SSH
-```
-"ssh": {
-        "ssh_cfg": {
-            "dest": "~/.ssh/config",
-            "src": ".ssh/config"
-        },
-        "ssh_keys": [
-            {
-                "decrypt": true,
-                "dest": "~/.ssh/example.public",
-                "src": ".ssh/example.private"
-            }
-        ]
- }
-```
-
-**ssh_cfg**:
-src: Contains the config file for SSH
-dest: Destination for where the config file should go.
-Note: This feature simply appends the data in src to dest.
-This is good when you have a file with key-identities that relate keys to identities.
-
-**ssh_keys**:
-decrypt: if this mode is selected, openssl will also ask for the encryption key upon moving the ssh-key defined in src.
-You will have to enter the password for the private key. The decrypted key will be located in **dest**.
-
 
 ### Add your own features
 
-Edit the main method in linker.py and add new arguments for the parser as well as defining new features in your own functions. The script simply iterates over a list of features and you can simply add another feature to this list.
-Not that the name of the feature should be the same as the name of the flag and you should encounter no problems. Take inspiration from what is written!
+To add your own features:
 
-## Credits
+define a feature as:
+ `def feature(**kwargs):` in the feature section of the code. From there you can access the profile json object  with kwargs.get("profile") and passed command-line options with kwargs.get("options").
+ Then implement whatever logic you wish to add.
+ You also MUST add the name of the feature in the list of features defined in the `load_features` function.
+
+## Credits and Contribution
 Credits to [Vibhav Pant](https://github.com/vibhavp/dotty) whose script I started off with but then added more features to.
 Further credits to [Valthor Halldórsson](https://github.com/vlthr) for inspiration and help which led to actualization of this script.
-
+If you do use it, please contribute by reporting bugs asap! Don't want incorrect symlinking or bad backup to happen due to something that was missed during implementation.
 
 
 

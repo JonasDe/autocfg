@@ -347,7 +347,7 @@ def main():
     parser.add_argument("-f", "--force", action="store_true", default=False,
             help="omits [Y/N] prompts and chooses the default value for the choice")
     parser.add_argument("-a", "--all", action="store_true", default=False,
-            help="enables all config flags")
+            help="enables all features")
     parser.add_argument("-d", "--directories", action="store_true", default=False,
             help="activates symlinking for directories ")
     parser.add_argument("-l", "--link", action="store_true", default=False,
