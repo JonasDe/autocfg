@@ -125,6 +125,19 @@ def query_yes_no(question, default="yes"):
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
+def gen_basic_profile():
+    profile = {}
+    profile["backup"] = "~/.dotfiles.backup"
+    profile["directories"] = []
+    profile["apt_get_dependencies"] = []
+    profile['commands'] = []
+    return profile
+
+def gen_basic_ignore(args):
+    return {
+            "files":[sys.argv[0],'linker.py', 'LICENSE', 'README.md', args.outfile],
+            "directories": [".git", ".ssh"]
+            }
 
 
 def main():
@@ -132,8 +145,6 @@ def main():
     parser.add_argument('outfile', metavar='outfile', type=str,
                         help='outfile name')
 
-    parser.add_argument('-d', metavar='dependencies', type=str,
-                        help='package dependency file, each package string separated by newline')
     args  = parser.parse_args()
     outfile = args.outfile
     rootdir = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -144,44 +155,13 @@ def main():
             sys.exit()
     
    
-    fileselected = query_f_d("Generate profile for files or directories?")
-    profile = {}
-    #Change to where you want to put backup folders 
-    profile["backup"] = "~/.dotfiles.backup"
+    fileselection = query_f_d("Generate profile for files or directories?")
 
+    profile = gen_basic_profile()
+    # Folders and files to ignore 
+    ignorelist = gen_basic_ignore(args)
 
-    # Change to your git repo
-    profile["branchdata"] = {"dotfiles_url": "git@gitlab.com:example/example.git",
-        "branch_locally": True,
-        "push_branch": True},
-
-    # Change if you have different ssh-paths
-    # src = where your key is located in the replica folder
-    # dest = where on the system to copy to
-    profile['ssh']= { "ssh_keys": [
-        { "src": ".ssh/example.private",
-            "dest": "~/.ssh/",
-            "decrypt": True
-            }
-        ]
-        ,
-        "ssh_cfg" : {
-            "src":".ssh/config",
-            "dest": "~/.ssh/config"
-            }
-        }
-    #Auto geneated
-    profile["directories"] = []
-    if args.d: profile["apt_get_dependencies"] = [str.strip(x) for x in  open(args.d).readlines()]
-
-    #Folders to ignore 
-    ignorelist = {
-            "files":[sys.argv[0], 'dependencies.txt', 'linker.py', 'LICENSE', 'README.md'],
-            "directories": [".git"]
-            }
-
-
-    if fileselected:
+    if fileselection:
         profile["link"] =  genfiles(rootdir, ignorelist)
     else:
         profile["link"] =  gendir(rootdir, ignorelist)
