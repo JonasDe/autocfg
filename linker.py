@@ -27,28 +27,30 @@ import apt
 
 global force
 
-def assertFeature(data, name):
-    if not data:
-        raise ImportWarning("Missing " +name+ " field from json profile")
+
+
+# ======= Assertion Handling =========
+def assert_feature(data, name):
+    if data == None:
+        raise ImportWarning()
     notify('processing '+name+'...')
 
-def install(**kwargs):
 
-    cache = apt.Cache()
-    js = kwargs['profile']
-    dependencies  = js.get("apt_get_dependencies")
-    assertFeature(dependencies, 'apt_get_dependencies')
-    
-    for pac_name in dependencies:
-    #cache = apt.Cache()
-        if cache.has_key(pac_name):
-            if cache[pac_name].is_installed:
-                print(pac_name + " already installed.")
-            else:
-                error_print(run_command("apt-get install {0}".format(pac_name)))
-        else:
-            print("failed to install package " + pac_name)
+def assert_src(src):
+    if not src:
+        return False
+    if not os.path.exists(abspath(src)):
+        return False
+    return True
 
+def assert_path(src, dest):
+    if not src or not dest:
+        return False
+    if not os.path.exists(abspath(src)):
+        return False
+    return True
+
+# ======= Stdout/Prompt Functions =========
 
 def prompt(question, default="yes"):
     global force
@@ -62,7 +64,7 @@ def prompt(question, default="yes"):
     The "answer" return value is True for "yes" or False for "no".
     """
     valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
+            "no": False, "n": False}
     if force:
         return valid[default]
 
@@ -84,25 +86,19 @@ def prompt(question, default="yes"):
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
-           
-def abspath(path):
-    return os.path.abspath(os.path.expanduser(path))
+                    "(or 'y' or 'n').\n")
 
 
-def assert_src(src):
-    if not src:
-        return False
-    if not os.path.exists(abspath(src)):
-        return False
-    return True
 
-def assert_path(src, dest):
-    if not src or not dest:
-        return False
-    if not os.path.exists(abspath(src)):
-        return False
-    return True
+            def ask_user(prompt):
+                valid = {"yes":True, 'y':True, '':True, "no":False, 'n':False}
+    while True:
+        print(prompt)
+        choice = input().lower()
+        if choice in valid:
+            return valid[choice]
+        else:
+            print("Enter a correct choice.", file=stderr)
 
 def error_print(val):
     if val:
@@ -112,153 +108,34 @@ def error_print(val):
 
     return val
 
-def ask_user(prompt):
-    valid = {"yes":True, 'y':True, '':True, "no":False, 'n':False}
-    while True:
-        print(prompt)
-        choice = input().lower()
-        if choice in valid:
-            return valid[choice]
-        else:
-            print("Enter a correct choice.", file=stderr)
-
-def directories(**kwargs):
-    profile = kwargs.get('profile')
-    dirlist = profile.get('directories')
-    assertFeature(dirlist, 'directories')
-    [create_directory(path) for path in dirlist]
-
-
-def create_directory(path):
-
-    exp = os.path.expanduser(path)
-    if (not os.path.isdir(exp)):
-        print("generating directory {0}".format(exp))
-        os.makedirs(exp)
-
-def branch(**kwargs):
-    profile = kwargs.get('profile')
-    bd = profile.get('branchdata')
-    assertFeature(bd, 'branchdata')
-    dotfiles_url = bd.get("dotfiles_url")
-    local = bd.get("branch_locally")
-    push = bd.get("push_branch")
-    if local:
-        name = input("Enter branch name for new local branch ")
-        res = run_command("git checkout -b "+name)
-        if not res and push:
-            print("Branched successfully")
-            if not run_command("git push -u origin "+name):
-                if dotfiles_url:
-                    print("Setting remote url {0}".format(dotfiles_url))
-                    error_print(run_command("git remote set-url origin {0}".format(dotfiles_url)))
-
-
 def fail(msg, src, dest):
     print("[FAILED] " + msg + " src: {0} dest: {1}".format(src,dest))
-    return false
+    return False
 
 def fail(msg, src):
     print("[FAILED] " + msg + " src: {0} ".format(src)) 
-    return false
+    return False
 
 def success(msg, src, dest):
     print("Success  "  + msg + " src: {0} dest : {1}".format(src,dest))
-    return true
+    return True
 
+def notify_config(msg):
+    print("[Configuring " + msg+']')
 
-def add_cfg(cfg):
-    src = abspath(cfg.get("src"))
-    dest = abspath(cfg.get("dest"))
-    if assert_path(src,dest):
-        with open(src, 'r') as a, open(dest, 'a+') as b:
-            for line in a:
-                b.write(line)
+def notify(status):
+    print("["+status+"]")
 
+def notify_msg(status, msg):
+    print("["+status+"] " + msg )
 
-def prof(kwargs):
-    return 
+# ======= System path Functions =========
 
-def ssh( **kwargs):
-    profile = kwargs['profile']
-    ssh = profile.get("ssh") 
-    assertFeature(ssh, 'ssh')
-    ssh_keys = ssh.get("ssh_keys")
-    ssh_cfg = ssh.get("ssh_cfg")
-    if ssh_keys:
-        for x in ssh_keys:
-            ssh_copy(x)
-    if ssh_cfg: add_cfg(ssh_cfg)
+def abspath(path):
+    return os.path.abspath(os.path.expanduser(path))
 
-
-def ssh_copy(key):
-    dest = key.get("dest")
-    src = key.get("src")
-    decrypt = key.get("decrypt")
-    assure_parent(dest)
-    if not assert_path(src, dest):
-        fail("assert", src, dest)
-    elif exists(dest):
-        if not prompt(dest+ " exists, replace?"):
-            print("Key skipped")
-            return
-    if decrypt:
-        ctr = 0
-        while run_command("openssl rsa -in {0} -out {1}".format(src, dest)) and ctr < 3:
-            print("Wrong pw. " + str(3-ctr) + " more attempts")
-            ctr+=1
-    else:
-        copy_path(src, dest)
-
-
-#def create_symlink(src, dest, replace, backupdest):
-def link(**kwargs):
-    profile = kwargs.get('profile')
-    args = kwargs.get('args')
-    backup = profile.get('backup')
-    links = profile.get('link' )
-    assertFeature(links, "link")
-    [create_symlink(src, links[src], args.replace, backupdest=backup) for src in links] 
-
-
-
-
-
-
-def create_symlink(src, dest, replace, backupdest):
-
-    reldest = dest
-    relsrc = src
-    dest = abspath(dest)
-    src = abspath(src)
-    
-
-    print("processing link {0} -> {1}".format(dest, src))
-    if not assert_src(src):
-        return fail("symlink", src)
-
-    broken_symlink = os.path.lexists(dest) and not os.path.exists(dest)
-    if os.path.lexists(dest):
-        print("following file exists: {}".format(dest))
-        if os.path.islink(dest) and os.readlink(dest) == src:
-            print("already symlink, skipping {0} -> {1}".format(dest, src))
-            return
-        elif backupdest:
-            # Backup
-            backup_file(dest, backupdest)
-            # Clear 
-            if os.path.isfile(dest) or broken_symlink:
-                os.remove(dest)
-            else:
-                shutil.rmtree(dest)
-
-        else:
-            return
-    print("symlinking {0} -> {1}".format(dest, src))
-    assure_parent(dest)
-
-
-    os.symlink(src, dest)
+def set_working_dir(path):
+    os.chdir(os.path.expanduser(os.path.abspath(os.path.dirname(path))))
 
 def exists(path):
     return os.path.exists(abspath(path))
@@ -267,14 +144,25 @@ def dirname(path):
     return os.path.dirname(abspath(path))
 
 def assure_parent(path):
-    print(path)
     folder = dirname(abspath(path))
     if not exists(folder):
         print("making {}".format(folder))
         os.makedirs(folder)
 
+
+
+
+
+
+
+
+
+# ============= Utilitary Functions  ===================
+
 def backup_file(prepath, backupdest):
+    notify_msg('backing up', prepath)
     postpath = os.path.relpath(abspath(prepath), os.path.expanduser('~'))
+    print(backupdest)
     backupdest = os.path.join(abspath(backupdest), postpath).replace("..", "xx")
     parent_folder = os.path.dirname(backupdest)
     if not os.path.exists(parent_folder):
@@ -284,7 +172,6 @@ def backup_file(prepath, backupdest):
     else:
         shutil.copytree(prepath, backupdest)
     print("backup done!")
-
 
 def copy_path(src, dest, force=False, announce=False):
     dest = os.path.expanduser(dest)
@@ -298,18 +185,85 @@ def copy_path(src, dest, force=False, announce=False):
         else:
             return
     if announce:
-        print("copying {1} -> {2}".format(src,dest))
+        print("copying {0} -> {1}".format(src,dest))
     assure_parent(dest)
-    
+
     if os.path.isfile(src):
         shutil.copy(src, dest)
     else:
         shutil.copytree(src, dest)
 
-def resetbackup(**kwargs):
+
+
+
+
+# ======================================================
+#                       FEATURES
+# ======================================================
+# To add a feature, simply 'def featurename(**kwargs):' 
+# and code ahead. the profile is in kwargs.get('profile')
+# and options such as force is in kwargs.get('options')
+# make sure to add the featurename in the list under
+# load_features
+
+
+# ===================[Directories]===================
+
+def directories(**kwargs):
+    profile = kwargs.get('profile')
+    dirlist = profile.get('directories')
+    [create_directory(path) for path in dirlist]
+
+def create_directory(path):
+    exp = os.path.expanduser(path)
+    if (not os.path.isdir(exp)):
+        print("generating directory {0}".format(exp))
+        os.makedirs(exp)
+
+
+# ===================[Link]==========================
+
+def link(**kwargs):
+    profile = kwargs.get('profile')
+    options = kwargs.get('options')
+    backup = profile.get('backup')
+    links = profile.get('link' )
+    for src, dest in links.items():
+        create_symlink(src, links[src], options.get('replace'), backupdest=backup)
+
+def create_symlink(src, dest, replace, backupdest):
+    reldest = dest
+    relsrc = src
+    dest = abspath(dest)
+    src = abspath(src)
+    if not assert_src(src):
+        fail('missing file ', src)
+        return 
+
+    broken_symlink = os.path.lexists(dest) and not os.path.exists(dest)
+    if os.path.lexists(dest):
+        if os.path.islink(dest) and os.readlink(dest) == src:
+            print("already symlink, skipping {0} -> {1}".format(dest, src))
+            return
+        elif backupdest:
+            # Backup
+            backup_file(dest, backupdest)
+            # Clear 
+            if os.path.isfile(dest) or broken_symlink:
+                os.remove(dest)
+            else:
+                shutil.rmtree(dest)
+        else:
+            return
+    print("symlinking {0} -> {1}".format(dest, src))
+    assure_parent(dest)
+    os.symlink(src, dest)
+
+# ===================[Backup]========================
+
+def backup(**kwargs):
     profile = kwargs['profile']
     backupdest = profile.get('backup')
-    assertFeature(backupdest, 'backup')
     dest = os.path.expanduser(backupdest)
     if os.path.exists(dest):
         if ask_user(dest+ " exists, reset backup folder? [Y/n]. (This will remove all files in the backup folder)"):
@@ -318,85 +272,109 @@ def resetbackup(**kwargs):
     else:
         os.makedirs(dest)
 
+# ===================[Install]========================
+
+def install(**kwargs):
+
+    cache = apt.Cache()
+    js = kwargs['profile']
+    dependencies  = js.get("install")
+
+    for pac_name in dependencies:
+        #cache = apt.Cache()
+        if cache.has_key(pac_name):
+            if cache[pac_name].is_installed:
+                print(pac_name + " already installed.")
+            else:
+                error_print(run_command("apt-get install {0}".format(pac_name)))
+        else:
+            print("failed to install package " + pac_name)
+
+# ===================[Commands]========================
+
 def commands(**kwargs):
     profile = kwargs.get('profile')
-    args = kwargs.get('args')
+    options = kwargs.get('options')
     commands = profile.get('commands')
-    assertFeature(commands, "commands")
     for command in commands:
         run_command(command)
 
 def run_command(command):
-    return os.system(command) #for new local branch for new local branch
+    return os.system(command)
 
-def notify_config(msg):
-    print("[Configuring " + msg+']')
+# ===================[Add your own]====================
+# ===================[Add your own]====================
+# ===================[Add your own]====================
 
-def notify(msg):
-    print("["+msg+"]")
+# ============= Fundamentals ==========================
+
+def load_features(argvars):
+    options = argvars.__dict__
+    cfgflg=['directories',
+            'install',
+            'link',
+            'commands',
+            'backup']
+    flags = {k: options[k] for k in cfgflg if k in options}
+    return flags, options
+
+def run_features(enabled_features, profile, options):
+    error_str = "[ERROR]"
+    kwa = {'profile':profile, 'options': options}
+
+    for f in enabled_features:
+        try:
+            assert_feature(profile.get(f.__name__), f.__name__)
+            f(**kwa)
+        except ImportWarning:
+            print(error_str+ " Missing [" +f.__name__+ "] field from json profile")
+        except Exception as default:
+            print(error_str+ " Failed to call feature [" + f.__name__ + "].")
+            print(default)
+
+
 
 def main():
-
-    global force
-
     # Command line options
     # Parser details
     parser = argparse.ArgumentParser(description="""
-    The script will default all Config flag options to False. These flags are needed to enable the scrpted features. Run with '-a' to include all, or simply toggle the ones of interest on one by one by adding their corresponding flag.
-    
+    The script will not run any feature unless a flag is supplied. Each included flag enables the corresponding feature. Run with '-a' to include all.
+
     """)
     parser.add_argument("config", help="the JSON file you want to use")
     parser.add_argument("-r", "--replace", action="store_true",
-                        help="replace files/folders if they already exist")
+            help="replace files/folders if they already exist")
     parser.add_argument("-f", "--force", action="store_true", default=False,
             help="omits [Y/N] prompts and chooses the default value for the choice")
     parser.add_argument("-a", "--all", action="store_true", default=False,
             help="enables all config flags")
-    parser.add_argument("-b", "--branch", action="store_true", default=False,
-            help="sets branch flag to true.[Config flag]")
-    parser.add_argument("-s", "--ssh", action="store_true", default=False,
-            help="sets ssh flag to true.[Config flag]")
     parser.add_argument("-d", "--directories", action="store_true", default=False,
-            help="sets directory flag to true.[Config flag]")
-    parser.add_argument("-i", "--install", action="store_true", default=False,
-            help="sets install flag to true.[Config flag]")
+            help="activates symlinking for directories ")
     parser.add_argument("-l", "--link", action="store_true", default=False,
-            help="sets symlink flag to true.[Config flag]")
+            help="activates symlinking procedure for files")
+    parser.add_argument("-i", "--install", action="store_true", default=False,
+            help="activates installation procedure")
+    parser.add_argument("-c", "--commands", action="store_true", default=False,
+            help="activates command procedure")
 
-    #Loading data
+    # Loading data
     notify("loading data")
     args = parser.parse_args()
-    js = json.load(open(args.config))
-    os.chdir(os.path.expanduser(os.path.abspath(os.path.dirname(args.config))))
-    argvars = args.__dict__
+    profile = json.load(open(args.config))
 
-    #These are needed to separate optional config parameters from normal optional parameters, such as --force
+    # Set woring directory to folder with config file
+    set_working_dir(args.config)
 
-    cfgflg=['branch',
-            'ssh',
-            'directories',
-            'install',
-            'link',
-            'commands']
-    flags = {k: argvars[k] for k in cfgflg if k in argvars}
+    # Collect features and options
+    feature_list, options = load_features(args)
 
-    #Always assume backup true for safety
-    flags['resetbackup'] = True 
-    force = args.force
-    if args.all: flags = {x: True for x in flags}    
-    
+    # Handle optional flags
+    if options['all']: feature_list = {x: True for x in feature_list}    
 
-    kwa = {'profile':js, 'args': args}
-    features = [install, ssh, resetbackup, link, branch, directories]
-    for f in features:
+    # Enabled_features is a list of function-pointers
+    enabled_features = [globals()[x] for x in feature_list if feature_list[x] == True]
 
-        if flags.get(f.__name__):
-            try:
-                f(**kwa)
-            except:
-                print("Failed to call feature [" + f.__name__ + "].")
-
-
+    run_features(enabled_features, profile, options)
     print("Done!")
 
 

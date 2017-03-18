@@ -1,36 +1,7 @@
 {
-    "apt_get_dependencies": [
-        "python3",
-        "openssl"
-    ],
+    "install": [ "python3" ],
     "backup": "~/.dotfiles.backup",
-    "branchdata": [
-        {
-            "branch_locally": true,
-            "dotfiles_url": "git@gitlab.com:example/example.git",
-            "push_branch": true
-        }
-    ],
     "directories": [],
-    "link": {
-        ".ssh/config": "~/.ssh/config",
-        ".ssh/example.private": "~/.ssh/example.private",
-        ".ssh/example.pub": "~/.ssh/example.pub",
-        "example": "~/example",
-        "example2": "~/example2",
-        "profile.json": "~/profile.json"
-    },
-    "ssh": {
-        "ssh_cfg": {
-            "dest": "~/.ssh/config",
-            "src": ".ssh/config"
-        },
-        "ssh_keys": [
-            {
-                "decrypt": true,
-                "dest": "~/.ssh/",
-                "src": ".ssh/example.private"
-            }
-        ]
-    }
+    "link": {},
+    "commands": [ "echo I am alive" ]
 }
