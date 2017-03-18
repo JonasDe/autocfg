@@ -82,9 +82,6 @@ optional arguments:
 ## How the programs work
 
 ###  profgen.py
-Run `python3 -d dependencies.txt profile.json` in the terminal to run the script and generate the file **profile.json** using the dependency file to add dependencies to the profile. 
-
-
 This script uses the working directory (location from which the script is located) to generate the **src:destination** fields for the linker. 
 It recursively traverses all folders from the current and generates a source:destination pair for each of these files. The prompt will ask if you want to generate files or folders.
 By placing it in your dotfiles folder you can simply generate src to destination profiles for all files/folders. 
@@ -108,6 +105,8 @@ When linker.py is run with the profile it uses its own relative path to try to s
 **Important**
 You should also make sure to edit the profgen.py file's main method to adjust what data is generated in the ssh,branchdata and backup fields. Unless you want to edit the json-profile file instead.
 
+Inside the profile.py file you can add names to the 'ignorelist' to make sure the profile doesn't generate them. By default, .git is added so it doesn't get spammed with gitfiles.
+
 
 ### linker.py and the profile fields
 linker.py will symlink files defined in the profile file as described in the following categories:
@@ -123,7 +122,7 @@ This will generate a symlink from dest to source when the script is run.
 
 #### Dependencies
 ```
-"apt_get_dependencies": [
+"install": [
         "package-name",
     ]
 ```
