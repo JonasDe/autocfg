@@ -25,6 +25,9 @@ import sys
 import argparse
 import apt
 
+from autocfg.utils.logging import fail, notify
+from autocfg.utils.file import assert_src, abspath, set_working_dir, assure_parent
+
 global force
 
 
@@ -33,22 +36,8 @@ global force
 def assert_feature(data, name):
     if data == None:
         raise ImportWarning()
-    notify('processing '+name+'...')
+    notify('processing ' + name + '...')
 
-
-def assert_src(src):
-    if not src:
-        return False
-    if not os.path.exists(abspath(src)):
-        return False
-    return True
-
-def assert_path(src, dest):
-    if not src or not dest:
-        return False
-    if not os.path.exists(abspath(src)):
-        return False
-    return True
 
 # ======= Stdout/Prompt Functions =========
 
@@ -100,64 +89,11 @@ def prompt(question, default="yes"):
         else:
             print("Enter a correct choice.", file=stderr)
 
-def error_print(val):
-    if val:
-        print("Failed. Error Code " + str(val))
-    else:
-        print("Success")
-
-    return val
-
-def fail(msg, src, dest):
-    print("[FAILED] " + msg + " src: {0} dest: {1}".format(src,dest))
-    return False
-
-def fail(msg, src):
-    print("[FAILED] " + msg + " src: {0} ".format(src)) 
-    return False
-
-def success(msg, src, dest):
-    print("Success  "  + msg + " src: {0} dest : {1}".format(src,dest))
-    return True
-
-def notify_config(msg):
-    print("[Configuring " + msg+']')
-
-def notify(status):
-    print("["+status+"]")
-
-def notify_msg(status, msg):
-    print("["+status+"] " + msg )
 
 # ======= System path Functions =========
 
-def abspath(path):
-    return os.path.abspath(os.path.expanduser(path))
 
-def set_working_dir(path):
-    os.chdir(os.path.expanduser(os.path.abspath(os.path.dirname(path))))
-
-def exists(path):
-    return os.path.exists(abspath(path))
-
-def dirname(path):
-    return os.path.dirname(abspath(path))
-
-def assure_parent(path):
-    folder = dirname(abspath(path))
-    if not exists(folder):
-        print("making {}".format(folder))
-        os.makedirs(folder)
-
-
-
-
-
-
-
-
-
-# ============= Utilitary Functions  ===================
+# ============= Utility Functions  ===================
 
 def backup_file(prepath, backupdest):
     notify_msg('backing up', prepath)

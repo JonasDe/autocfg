@@ -1,7 +1,17 @@
 {
-    "install": [ "python3" ],
-    "backup": "~/.dotfiles.backup",
-    "directories": [],
-    "link": {},
-    "commands": [ "echo I am alive" ]
+    "default": {
+        "install": {"force": true},
+        "backup": {"force": true}
+    },
+    "tasks": {
+        "install": [
+            "python3"
+        ],
+        "backup": "~/.dotfiles.backup",
+        "directories": [],
+        "link": {},
+        "commands": [
+            "echo I am alive"
+        ]
+    }
 }
